@@ -3,9 +3,11 @@ package com.example.mywebapp.user;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,7 +31,14 @@ public class UserController {
     }
 
     @PostMapping("/users/save")
-    public String saveUser(User user, RedirectAttributes ra){
+    public String saveUser(@Valid User user, BindingResult result, RedirectAttributes ra){
+        User existingUser = service.findByEmail(user.getEmail());
+        if(existingUser != null){
+            result.rejectValue("email", null, "Ovaj mejl postoji u bazi");
+        }
+        if(result.hasErrors()){
+            return "user_form";
+        }
         service.save(user);
         ra.addFlashAttribute("message","User has added successfully!");
         return "redirect:/users";
